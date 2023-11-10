@@ -5,7 +5,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync/atomic"
 )
+
+var globalCounter *int32 = new(int32)
 
 func main() {
 
@@ -22,6 +25,7 @@ func main() {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
+	log.Println("Serving Request number: ", atomic.AddInt32(globalCounter, 1))
 	config := Load()
 	address := fmt.Sprintf("%s:%d", config.PONG_HOST, config.PONG_PORT)
 	log.Printf("Calling '%s/pong'\n", address)
