@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: ping
-          image: api:v1
+          image: ping:v1
           resources:
             limits:
               memory: "64Mi"
@@ -24,7 +24,16 @@ spec:
             - containerPort: 8080
           livenessProbe:
             httpGet:
-              path: /ping
+              path: /health
               port: 8080
             initialDelaySeconds: 3
             periodSeconds: 3
+          env:
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: '8080'
+            - name: PONG_HOST
+              value: pong
+            - name: PONG_PORT
+              value: '8080'
