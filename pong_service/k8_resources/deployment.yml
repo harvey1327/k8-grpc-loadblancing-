@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ping
+  name: pong
 spec:
   selector:
     matchLabels:
-      app: ping
-  replicas: 2
+      app: pong
+  replicas: 1
   template:
     metadata:
       labels:
-        app: ping
+        app: pong
     spec:
       containers:
-        - name: ping
-          image: service:v1
+        - name: pong
+          image: pong:v1
           resources:
             limits:
               memory: "64Mi"
@@ -24,7 +24,12 @@ spec:
             - containerPort: 8080
           livenessProbe:
             httpGet:
-              path: /ping
+              path: /health
               port: 8080
             initialDelaySeconds: 3
             periodSeconds: 3
+          env:
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: '8080'
