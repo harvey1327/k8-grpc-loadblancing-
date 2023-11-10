@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: ping
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
