@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	times := 234
+	times := 500
 	for i := 0; i < times; i++ {
 		request()
 	}

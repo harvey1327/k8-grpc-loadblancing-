@@ -1,0 +1,9 @@
+apiVersion: k3d.io/v1alpha2
+kind: Simple
+name: mycluster
+servers: 1
+agents: 2
+ports:
+  - port: 8081:80
+    nodeFilters:
+      - loadbalancer
