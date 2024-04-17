@@ -1,7 +1,6 @@
 #!/bin/bash
 
 docker build . -t docker.io/library/pong:v1
-k3d image import docker.io/library/pong:v1 -c mycluster
+kind load docker-image docker.io/library/pong:v1 --name grpc-cluster
 
-kubectl apply -f ./k8_resources/deployment.yml
-kubectl apply -f ./k8_resources/service.yml
+kubectl apply -f ./k8_resources
