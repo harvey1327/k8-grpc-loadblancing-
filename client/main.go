@@ -6,14 +6,14 @@ import (
 )
 
 func main() {
-	times := 500
+	times := 1
 	for i := 0; i < times; i++ {
 		request()
 	}
 }
 
 func request() {
-	resp, err := http.Get("http://127.0.0.1:6443/ping")
+	resp, err := http.Get("http://127.0.0.1/ping")
 	if err != nil {
 		log.Fatalln(err)
 	}
