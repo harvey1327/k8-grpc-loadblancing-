@@ -32,23 +32,26 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := http.Get(fmt.Sprintf("http://%s/pong", address))
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
+		w.WriteHeader(500)
+		return
 	}
 	if resp.StatusCode == 200 {
 		w.WriteHeader(200)
 		defer resp.Body.Close()
 		b, err := io.ReadAll(resp.Body)
 		if err != nil {
+			log.Println(err)
 			w.WriteHeader(500)
 		}
 		_, err = w.Write(b)
 		if err != nil {
+			log.Println(err)
 			w.WriteHeader(500)
 		}
 	} else {
-		w.WriteHeader(500)
+		w.WriteHeader(resp.StatusCode)
 	}
-
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {
