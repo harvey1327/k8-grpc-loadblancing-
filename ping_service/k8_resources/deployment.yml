@@ -1,16 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ping
+  name: ping-dep
+  namespace: ping
 spec:
   selector:
     matchLabels:
-      app: ping
+      app: ping-app
   replicas: 1
   template:
     metadata:
       labels:
-        app: ping
+        app: ping-app
     spec:
       containers:
         - name: ping
@@ -34,6 +35,6 @@ spec:
             - name: PORT
               value: '8080'
             - name: PONG_HOST
-              value: pong
+              value: pong-svc.pong
             - name: PONG_PORT
               value: '8080'

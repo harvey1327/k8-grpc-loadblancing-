@@ -1,16 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pong
+  name: pong-dep
+  namespace: pong
 spec:
   selector:
     matchLabels:
-      app: pong
-  replicas: 5
+      app: pong-app
+  replicas: 4
   template:
     metadata:
       labels:
-        app: pong
+        app: pong-app
     spec:
       containers:
         - name: pong
