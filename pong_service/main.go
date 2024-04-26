@@ -38,7 +38,7 @@ type requestHandler struct {
 }
 
 func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	resp := response{ID: h.id, Message: "pong"}
 	b, err := json.Marshal(&resp)
 	if err != nil {

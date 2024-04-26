@@ -8,5 +8,5 @@ kubectl -n kubernetes-dashboard create token admin-user
 kubectl apply -f ./k8_resources
 kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d
 
-sleep 10
+sleep 15
 kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443

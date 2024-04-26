@@ -1,20 +1,25 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"sync/atomic"
 )
 
 var globalCounter *int32 = new(int32)
 
 func main() {
-
-	http.HandleFunc("/ping", handleRequest)
-	http.HandleFunc("/health", handleHealth)
 	config := Load()
+
+	requestHandler := requestHandler{
+		config: config,
+		cache:  NewCache(),
+	}
+
+	http.HandleFunc("/ping", requestHandler.handle)
+	http.HandleFunc("/health", handleHealth)
 	address := fmt.Sprintf("%s:%d", config.HOST, config.PORT)
 	log.Printf("Starting up on: '%s'\n", address)
 	var err = http.ListenAndServe(address, nil)
@@ -24,36 +29,58 @@ func main() {
 	}
 }
 
-func handleRequest(w http.ResponseWriter, r *http.Request) {
-	log.Println("Serving Request number: ", atomic.AddInt32(globalCounter, 1))
-	config := Load()
-	address := fmt.Sprintf("%s:%d", config.PONG_HOST, config.PONG_PORT)
-	log.Printf("Calling '%s/pong'\n", address)
+func handleHealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+}
 
-	resp, err := http.Get(fmt.Sprintf("http://%s/pong", address))
+type requestHandler struct {
+	config *Config
+	cache  *Cache
+}
+
+func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
+	resp, err := http.Get(fmt.Sprintf("http://%s/pong", fmt.Sprintf("%s:%d", h.config.PONG_HOST, h.config.PONG_PORT)))
+
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
 	}
+
 	if resp.StatusCode == 200 {
-		w.WriteHeader(200)
 		defer resp.Body.Close()
 		b, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(500)
+			return
 		}
-		_, err = w.Write(b)
+
+		resp := response{}
+		err = json.Unmarshal(b, &resp)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(500)
+			return
 		}
+
+		h.cache.Increment(resp.ID)
+		output := h.cache.Print()
+		_, err = w.Write([]byte(output))
+		w.WriteHeader(200)
+		log.Println(output)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+
 	} else {
 		w.WriteHeader(resp.StatusCode)
 	}
 }
 
-func handleHealth(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
+type response struct {
+	ID      string `json:"id"`
+	Message string `json:"message"`
 }
