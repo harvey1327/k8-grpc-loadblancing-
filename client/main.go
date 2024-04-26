@@ -9,7 +9,7 @@ import (
 
 func main() {
 	client := http.Client{Timeout: 1 * time.Second}
-	times := 2
+	times := 1000
 	for i := 0; i < times; i++ {
 		time.Sleep(5 * time.Millisecond)
 		request(&client)

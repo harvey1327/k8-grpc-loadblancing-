@@ -4,33 +4,38 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"sync/atomic"
 )
 
 type Cache struct {
-	internal *sync.Map
+	internal map[string]int
+	mutex    sync.Mutex
 }
 
 func NewCache() *Cache {
 	return &Cache{
-		internal: &sync.Map{},
+		internal: make(map[string]int),
 	}
 }
 
 func (c *Cache) Increment(key string) {
-	inc := int32(1)
-	count, loaded := c.internal.LoadOrStore(key, inc)
-	if loaded {
-		atomic.AddInt32(count.(*int32), inc)
+	c.mutex.Lock()
+	if v, ok := c.internal[key]; ok {
+		c.internal[key] = v + 1
+	} else {
+		c.internal[key] = 1
 	}
+	c.mutex.Unlock()
 }
 
 func (c *Cache) Print() string {
+	c.mutex.Lock()
+
 	result := make([]string, 0)
-	c.internal.Range(func(key, value any) bool {
-		c := fmt.Sprintf("%s:%d", key, value)
+	for k, v := range c.internal {
+		c := fmt.Sprintf("%s:%d", k, v)
 		result = append(result, c)
-		return true
-	})
+	}
+
+	c.mutex.Unlock()
 	return fmt.Sprintf("Key:Value -> [%s]", strings.Join(result, ","))
 }

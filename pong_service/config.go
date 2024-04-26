@@ -11,15 +11,17 @@ var once sync.Once
 var instance *Config
 
 type Config struct {
-	HOST string
-	PORT int
+	HOST    string
+	PORT    int
+	TIMEOUT int
 }
 
 func Load() *Config {
 	once.Do(func() {
 		instance = &Config{
-			HOST: getEnv("HOST"),
-			PORT: getEnvAsInt("PORT"),
+			HOST:    getEnv("HOST"),
+			PORT:    getEnvAsInt("PORT"),
+			TIMEOUT: getEnvAsInt("TIMEOUT"),
 		}
 	})
 	return instance

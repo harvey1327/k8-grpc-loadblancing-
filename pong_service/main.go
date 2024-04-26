@@ -14,12 +14,12 @@ var globalCounter *int32 = new(int32)
 func main() {
 
 	id := uuid.New().String()
-	handler := requestHandler{id: id}
+	config := Load()
+	handler := requestHandler{id: id, config: config}
 
 	http.HandleFunc("/pong", handler.handle)
 	http.HandleFunc("/health", handleHealth)
 
-	config := Load()
 	address := fmt.Sprintf("%s:%d", config.HOST, config.PORT)
 	log.Printf("Starting up on: '%s'\n", address)
 	var err = http.ListenAndServe(address, nil)
@@ -34,24 +34,27 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 type requestHandler struct {
-	id string
+	id     string
+	config *Config
 }
 
 func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(time.Duration(h.config.TIMEOUT) * time.Millisecond)
 	resp := response{ID: h.id, Message: "pong"}
 	b, err := json.Marshal(&resp)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
+		return
 	}
 	_, err = w.Write(b)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
+		return
 	}
-	log.Println("success")
 	w.WriteHeader(200)
+	log.Println("success")
 }
 
 type response struct {
