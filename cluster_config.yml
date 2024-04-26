@@ -16,3 +16,4 @@ nodes:
 networking:
   ipFamily: dual
   apiServerAddress: 127.0.0.1
+  kubeProxyMode: "ipvs"

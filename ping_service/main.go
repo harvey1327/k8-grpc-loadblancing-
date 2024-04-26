@@ -6,16 +6,25 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 var globalCounter *int32 = new(int32)
 
 func main() {
 	config := Load()
-
+	client := http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:        1,
+			MaxIdleConnsPerHost: 1,
+			MaxConnsPerHost:     1,
+		},
+		Timeout: 1 * time.Second,
+	}
 	requestHandler := requestHandler{
 		config: config,
 		cache:  NewCache(),
+		client: &client,
 	}
 
 	http.HandleFunc("/ping", requestHandler.handle)
@@ -36,6 +45,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 type requestHandler struct {
 	config *Config
 	cache  *Cache
+	client *http.Client
 }
 
 func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {

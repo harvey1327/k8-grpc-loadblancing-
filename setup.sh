@@ -11,3 +11,6 @@ kubectl wait --namespace ingress-nginx \
   --for=condition=ready pod \
   --selector=app.kubernetes.io/component=controller \
   --timeout=90s
+
+docker exec grpc-cluster-control-plane apt-get update
+docker exec grpc-cluster-control-plane apt-get install ipvsadm -y
