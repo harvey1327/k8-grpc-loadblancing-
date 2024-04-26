@@ -8,8 +8,7 @@ import (
 
 func main() {
 	client := http.Client{}
-	times := 1000
-	for i := 0; i < times; i++ {
+	for {
 		request(&client)
 	}
 }
