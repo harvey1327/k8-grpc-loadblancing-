@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-var globalCounter *int32 = new(int32)
-
 func main() {
 	config := Load()
 	client := http.Client{
@@ -48,7 +46,7 @@ type requestHandler struct {
 	client *http.Client
 }
 
-func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
+func (h *requestHandler) handle(w http.ResponseWriter, req *http.Request) {
 	resp, err := http.Get(fmt.Sprintf("http://%s/pong", fmt.Sprintf("%s:%d", h.config.PONG_HOST, h.config.PONG_PORT)))
 
 	if err != nil {

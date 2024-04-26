@@ -47,13 +47,13 @@ func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
+	w.WriteHeader(200)
 	_, err = w.Write(b)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
 	}
-	w.WriteHeader(200)
 	log.Println("success")
 }
 
