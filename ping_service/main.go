@@ -16,6 +16,9 @@ func main() {
 			IdleConnTimeout:       1 * time.Second,
 			TLSHandshakeTimeout:   1 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
+			MaxIdleConnsPerHost:   1,
+			MaxIdleConns:          1,
+			DisableKeepAlives:     true,
 		},
 		Timeout: 1 * time.Second,
 	}
@@ -74,8 +77,8 @@ func (h *requestHandler) handle(w http.ResponseWriter, req *http.Request) {
 
 		h.cache.Increment(resp.ID)
 		output := h.cache.Print()
-		_, err = w.Write([]byte(output))
 		w.WriteHeader(200)
+		_, err = w.Write([]byte(output))
 		log.Println(output)
 		if err != nil {
 			log.Println(err)
