@@ -7,9 +7,10 @@ import (
 )
 
 func main() {
-	client := http.Client{Timeout: 1 * time.Second}
-	times := 10
+	client := http.Client{Timeout: 2 * time.Second}
+	times := 1000
 	for i := 0; i < times; i++ {
+		time.Sleep(10 * time.Millisecond)
 		request(&client)
 	}
 }

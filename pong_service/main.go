@@ -1,17 +1,22 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
-	"sync/atomic"
+	"time"
 )
 
 var globalCounter *int32 = new(int32)
 
 func main() {
 
-	http.HandleFunc("/pong", handleRequest)
+	id := uuid.New().String()
+	handler := requestHandler{id: id}
+
+	http.HandleFunc("/pong", handler.handle)
 	http.HandleFunc("/health", handleHealth)
 
 	config := Load()
@@ -24,15 +29,32 @@ func main() {
 	}
 }
 
-func handleRequest(w http.ResponseWriter, r *http.Request) {
-	log.Println("Serving Request number: ", atomic.AddInt32(globalCounter, 1))
-	_, err := w.Write([]byte("pong"))
-	if err != nil {
-		w.WriteHeader(500)
-	}
+func handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 }
 
-func handleHealth(w http.ResponseWriter, r *http.Request) {
+type requestHandler struct {
+	id string
+}
+
+func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
+	time.Sleep(100 * time.Millisecond)
+	resp := response{ID: h.id, Message: "pong"}
+	b, err := json.Marshal(&resp)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+	}
+	_, err = w.Write(b)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+	}
+	log.Println("success")
 	w.WriteHeader(200)
+}
+
+type response struct {
+	ID      string `json:"id"`
+	Message string `json:"message"`
 }
