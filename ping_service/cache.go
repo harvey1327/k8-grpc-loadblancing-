@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 )
@@ -35,6 +36,7 @@ func (c *Cache) Print() string {
 		c := fmt.Sprintf("%s:%d", k, v)
 		result = append(result, c)
 	}
+	slices.Sort(result)
 
 	c.mutex.Unlock()
 	return fmt.Sprintf("Key:Value -> [%s]", strings.Join(result, ","))

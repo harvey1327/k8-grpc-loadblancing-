@@ -8,7 +8,14 @@ import (
 )
 
 func main() {
-	client := http.Client{Timeout: 1 * time.Second}
+	client := http.Client{
+		Transport: &http.Transport{
+			IdleConnTimeout:       1 * time.Second,
+			TLSHandshakeTimeout:   1 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+		Timeout: 1 * time.Second,
+	}
 	times := 1000
 	for i := 0; i < times; i++ {
 		time.Sleep(5 * time.Millisecond)
