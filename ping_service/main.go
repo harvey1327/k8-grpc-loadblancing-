@@ -13,9 +13,9 @@ func main() {
 	config := Load()
 	client := http.Client{
 		Transport: &http.Transport{
-			MaxIdleConns:        1,
-			MaxIdleConnsPerHost: 1,
-			MaxConnsPerHost:     1,
+			IdleConnTimeout:       1 * time.Second,
+			TLSHandshakeTimeout:   1 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
 		},
 		Timeout: 1 * time.Second,
 	}
@@ -47,7 +47,7 @@ type requestHandler struct {
 }
 
 func (h *requestHandler) handle(w http.ResponseWriter, req *http.Request) {
-	resp, err := http.Get(fmt.Sprintf("http://%s/pong", fmt.Sprintf("%s:%d", h.config.PONG_HOST, h.config.PONG_PORT)))
+	resp, err := h.client.Get(fmt.Sprintf("http://%s/pong", fmt.Sprintf("%s:%d", h.config.PONG_HOST, h.config.PONG_PORT)))
 
 	if err != nil {
 		log.Println(err)
