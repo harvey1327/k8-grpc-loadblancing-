@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package message;
+option go_package = "/proto/generated";
+
+service Service {
+  rpc Unary(Request) returns (Response);
+}
+
+message Request {
+
+}
+
+message Response {
+  string eventID = 1;
+}
