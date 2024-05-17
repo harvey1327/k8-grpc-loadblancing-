@@ -7,10 +7,6 @@ service Service {
   rpc Unary(Request) returns (Response);
 }
 
-message Request {
+message Request {}
 
-}
-
-message Response {
-  string eventID = 1;
-}
+message Response {}
