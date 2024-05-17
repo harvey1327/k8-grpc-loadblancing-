@@ -1,9 +1,8 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -22,13 +21,13 @@ func main() {
 		},
 		Timeout: 1 * time.Second,
 	}
-	requestHandler := requestHandler{
+	requestHandler := &requestHandler{
 		config: config,
-		cache:  NewCache(),
 		client: &client,
 	}
 
-	http.HandleFunc("/ping", requestHandler.handle)
+	http.HandleFunc("/start", requestHandler.start)
+	http.HandleFunc("/stop", requestHandler.stop)
 	http.HandleFunc("/health", handleHealth)
 	address := fmt.Sprintf("%s:%d", config.HOST, config.PORT)
 	log.Printf("Starting up on: '%s'\n", address)
@@ -45,53 +44,45 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 
 type requestHandler struct {
 	config *Config
-	cache  *Cache
 	client *http.Client
+	cancel context.CancelFunc
 }
 
-func (h *requestHandler) handle(w http.ResponseWriter, req *http.Request) {
-	resp, err := h.client.Get(fmt.Sprintf("http://%s/pong", fmt.Sprintf("%s:%d", h.config.PONG_HOST, h.config.PONG_PORT)))
+func (h *requestHandler) start(w http.ResponseWriter, req *http.Request) {
+	if h.cancel == nil {
+		ctx, cancel := context.WithCancel(context.Background())
+		h.cancel = cancel
 
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(500)
-		return
-	}
-
-	if resp.StatusCode == 200 {
-		defer resp.Body.Close()
-		b, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(500)
-			return
-		}
-
-		resp := response{}
-		err = json.Unmarshal(b, &resp)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(500)
-			return
-		}
-
-		h.cache.Increment(resp.ID)
-		output := h.cache.Print()
+		go h.process(ctx)
 		w.WriteHeader(200)
-		_, err = w.Write([]byte(output))
-		log.Println(output)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(500)
-			return
-		}
-
 	} else {
-		w.WriteHeader(resp.StatusCode)
+		w.WriteHeader(500)
 	}
 }
 
-type response struct {
-	ID      string `json:"id"`
-	Message string `json:"message"`
+func (h *requestHandler) process(ctx context.Context) {
+	t := time.NewTicker(10 * time.Millisecond)
+	for {
+		select {
+		case <-t.C:
+			resp, err := h.client.Get(fmt.Sprintf("http://%s/pong", fmt.Sprintf("%s:%d", h.config.PONG_HOST, h.config.PONG_PORT)))
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			log.Println(resp.StatusCode)
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func (h *requestHandler) stop(w http.ResponseWriter, req *http.Request) {
+	if h.cancel != nil {
+		h.cancel()
+		w.WriteHeader(200)
+		h.cancel = nil
+	} else {
+		w.WriteHeader(500)
+	}
 }

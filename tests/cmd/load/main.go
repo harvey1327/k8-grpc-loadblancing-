@@ -1,29 +1,34 @@
 package main
 
 import (
-	"io"
 	"log"
 	"net/http"
 )
 
 func main() {
-	client := http.Client{}
-	for {
-		request(&client)
+	run := false
+
+	if run {
+		start()
+	} else {
+		stop()
 	}
 }
 
-func request(client *http.Client) {
-	resp, err := client.Get("http://127.0.0.1:8081/ping")
+func stop() {
+	client := http.Client{}
+	resp, err := client.Get("http://127.0.0.1:8081/stop")
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
-	defer resp.Body.Close()
-	b, err := io.ReadAll(resp.Body)
+	log.Println(resp.StatusCode)
+}
+
+func start() {
+	client := http.Client{}
+	resp, err := client.Get("http://127.0.0.1:8081/start")
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
-	log.Printf("StatusCode: %d, Response: %s\n", resp.StatusCode, string(b))
+	log.Println(resp.StatusCode)
 }
