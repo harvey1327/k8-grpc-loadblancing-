@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net/http"
+	"ping/proto/generated"
 	"time"
 )
 
@@ -21,6 +24,16 @@ func main() {
 		},
 		Timeout: 1 * time.Second,
 	}
+
+	options := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:%d", config.PONG_HOST, config.PONG_PORT), options...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	grpcClient := generated.NewPongClient(conn)
+
 	requestHandler := &requestHandler{
 		config: config,
 		client: &client,
@@ -31,7 +44,7 @@ func main() {
 	http.HandleFunc("/health", handleHealth)
 	address := fmt.Sprintf("%s:%d", config.HOST, config.PORT)
 	log.Printf("Starting up on: '%s'\n", address)
-	var err = http.ListenAndServe(address, nil)
+	err = http.ListenAndServe(address, nil)
 
 	if err != nil {
 		log.Panicln("Server failed starting. Error: %w", err)

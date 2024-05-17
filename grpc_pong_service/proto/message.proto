@@ -3,8 +3,9 @@ syntax = "proto3";
 package message;
 option go_package = "/proto/generated";
 
-service Service {
-  rpc Unary(Request) returns (Response);
+service Pong {
+  rpc Pong(Request) returns (Response);
+  rpc Health(Request) returns (Response);
 }
 
 message Request {}
