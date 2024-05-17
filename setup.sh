@@ -3,7 +3,7 @@
 kind delete cluster --name grpc-cluster
 kind create cluster --config ./cluster_config.yml
 
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+kubectl apply -f nginx-controller.yaml
 
 sleep 20
 
@@ -12,5 +12,5 @@ kubectl wait --namespace ingress-nginx \
   --selector=app.kubernetes.io/component=controller \
   --timeout=90s
 
-docker exec grpc-cluster-control-plane apt-get update
-docker exec grpc-cluster-control-plane apt-get install ipvsadm -y
+#docker exec grpc-cluster-control-plane apt-get update
+#docker exec grpc-cluster-control-plane apt-get install ipvsadm -y

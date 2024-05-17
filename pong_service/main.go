@@ -1,12 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"log"
 	"net/http"
-	"time"
 )
 
 var globalCounter *int32 = new(int32)
@@ -15,14 +16,25 @@ func main() {
 
 	id := uuid.New().String()
 	config := Load()
-	handler := requestHandler{id: id, config: config}
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.DB_HOST, config.DB_PORT, config.DB_USERNAME, config.DB_PASSWORD, config.DB_NAME)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Panicln("Failed to connect to database. Error: %w", err)
+	}
+
+	err = db.AutoMigrate(&model{})
+	if err != nil {
+		log.Panicln("Failed to auto migrate. Error: %w", err)
+	}
+
+	handler := requestHandler{id: id, db: db}
 
 	http.HandleFunc("/pong", handler.handle)
 	http.HandleFunc("/health", handleHealth)
 
 	address := fmt.Sprintf("%s:%d", config.HOST, config.PORT)
 	log.Printf("Starting up on: '%s'\n", address)
-	var err = http.ListenAndServe(address, nil)
+	err = http.ListenAndServe(address, nil)
 
 	if err != nil {
 		log.Panicln("Server failed starting. Error: %w", err)
@@ -34,30 +46,40 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 type requestHandler struct {
-	id     string
-	config *Config
+	id string
+	db *gorm.DB
 }
 
 func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(time.Duration(h.config.TIMEOUT) * time.Millisecond)
-	resp := response{ID: h.id, Message: "pong"}
-	b, err := json.Marshal(&resp)
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(500)
-		return
-	}
 	w.WriteHeader(200)
-	_, err = w.Write(b)
-	if err != nil {
-		log.Println(err)
+	m := model{
+		UUID: h.id,
+	}
+	tx := h.db.Table("models").Clauses(clause.Locking{
+		Strength: clause.LockingStrengthUpdate,
+	}).Where("uuid = ?", h.id)
+	if tx.Error != nil {
 		w.WriteHeader(500)
+		log.Println("Error with transaction clause: ", tx.Error.Error())
 		return
 	}
-	log.Println("success")
+	tx.FirstOrCreate(&m)
+	if tx.Error != nil {
+		w.WriteHeader(500)
+		log.Println("Error with transaction FirstOrCreate: ", tx.Error.Error())
+		return
+	}
+	tx.Update("counter", m.Counter+1)
+	if tx.Error != nil {
+		w.WriteHeader(500)
+		log.Println("Error with transaction Update: ", tx.Error.Error())
+		return
+	}
+	log.Printf("UUID: %s, Counter: %d", m.UUID, m.Counter+1)
 }
 
-type response struct {
-	ID      string `json:"id"`
-	Message string `json:"message"`
+type model struct {
+	gorm.Model
+	UUID    string
+	Counter int
 }

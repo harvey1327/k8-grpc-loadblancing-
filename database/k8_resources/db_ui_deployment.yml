@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-ui-dep
+  namespace: database
+spec:
+  selector:
+    matchLabels:
+      app: database-ui-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: database-ui-app
+    spec:
+      containers:
+        - name: database-ui
+          image: dpage/pgadmin4:8.6
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "admin@admin.com"
+            - name: PGADMIN_DEFAULT_PASSWORD
+              value: "admin"
