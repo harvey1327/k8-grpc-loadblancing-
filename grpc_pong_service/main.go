@@ -6,7 +6,10 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"grpc_pong/proto/generated"
@@ -16,21 +19,36 @@ import (
 
 func main() {
 
-	conf := Load()
+	config := Load()
 	id := "grpc-" + uuid.New().String()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", conf.HOST, conf.PORT))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.HOST, config.PORT))
 	if err != nil {
-		log.Fatalf("failed to listen: %s:%d", conf.HOST, conf.PORT)
+		log.Fatalf("failed to listen: %s:%d", config.HOST, config.PORT)
 	} else {
 		log.Printf("listening on %s", lis.Addr().String())
 	}
 
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", config.DB_HOST, config.DB_PORT, config.DB_USERNAME, config.DB_PASSWORD, config.DB_NAME)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Panicln("Failed to connect to database. Error: %w", err)
+	}
+
+	err = db.AutoMigrate(&model{})
+	if err != nil {
+		log.Panicln("Failed to auto migrate. Error: %w", err)
+	}
+
 	service := ServiceImpl{
 		id: id,
+		db: db,
 	}
 
 	grpcServer := grpc.NewServer()
+
+	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
+
 	generated.RegisterPongServer(grpcServer, &service)
 
 	if err := grpcServer.Serve(lis); err != nil {
@@ -66,10 +84,6 @@ func (s *ServiceImpl) Pong(ctx context.Context, req *generated.Request) (*genera
 		return nil, status.Error(codes.Aborted, tx.Error.Error())
 	}
 	log.Printf("UUID: %s, Counter: %d", m.UUID, m.Counter+1)
-	return &generated.Response{}, nil
-}
-
-func (s *ServiceImpl) Health(ctx context.Context, req *generated.Request) (*generated.Response, error) {
 	return &generated.Response{}, nil
 }
 

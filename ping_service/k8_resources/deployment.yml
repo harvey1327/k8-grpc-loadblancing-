@@ -38,3 +38,7 @@ spec:
               value: pong-svc.pong
             - name: PONG_PORT
               value: '8080'
+            - name: GRPC_PONG_HOST
+              value: grpc-pong-svc.grpc-pong
+            - name: GRPC_PONG_PORT
+              value: '8080'

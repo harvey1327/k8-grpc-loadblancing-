@@ -28,15 +28,16 @@ func main() {
 	options := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
-	conn, err := grpc.NewClient(fmt.Sprintf("%s:%d", config.PONG_HOST, config.PONG_PORT), options...)
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:%d", config.GRPC_PONG_HOST, config.GRPC_PONG_PORT), options...)
 	if err != nil {
 		log.Fatal(err)
 	}
 	grpcClient := generated.NewPongClient(conn)
 
 	requestHandler := &requestHandler{
-		config: config,
-		client: &client,
+		config:     config,
+		client:     &client,
+		grpcClient: grpcClient,
 	}
 
 	http.HandleFunc("/start", requestHandler.start)
@@ -56,9 +57,10 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 type requestHandler struct {
-	config *Config
-	client *http.Client
-	cancel context.CancelFunc
+	config     *Config
+	client     *http.Client
+	grpcClient generated.PongClient
+	cancel     context.CancelFunc
 }
 
 func (h *requestHandler) start(w http.ResponseWriter, req *http.Request) {
@@ -66,14 +68,15 @@ func (h *requestHandler) start(w http.ResponseWriter, req *http.Request) {
 		ctx, cancel := context.WithCancel(context.Background())
 		h.cancel = cancel
 
-		go h.process(ctx)
+		go h.processClient(ctx)
+		go h.processGrpcClient(ctx)
 		w.WriteHeader(200)
 	} else {
 		w.WriteHeader(500)
 	}
 }
 
-func (h *requestHandler) process(ctx context.Context) {
+func (h *requestHandler) processClient(ctx context.Context) {
 	t := time.NewTicker(10 * time.Millisecond)
 	for {
 		select {
@@ -84,6 +87,23 @@ func (h *requestHandler) process(ctx context.Context) {
 				continue
 			}
 			log.Println(resp.StatusCode)
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func (h *requestHandler) processGrpcClient(ctx context.Context) {
+	t := time.NewTicker(10 * time.Millisecond)
+	for {
+		select {
+		case <-t.C:
+			_, err := h.grpcClient.Pong(context.TODO(), nil)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			log.Println(200)
 		case <-ctx.Done():
 			return
 		}

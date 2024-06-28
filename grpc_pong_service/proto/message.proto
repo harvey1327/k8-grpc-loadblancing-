@@ -5,7 +5,6 @@ option go_package = "/proto/generated";
 
 service Pong {
   rpc Pong(Request) returns (Response);
-  rpc Health(Request) returns (Response);
 }
 
 message Request {}

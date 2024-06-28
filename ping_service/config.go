@@ -11,19 +11,23 @@ var once sync.Once
 var instance *Config
 
 type Config struct {
-	HOST      string
-	PORT      int
-	PONG_HOST string
-	PONG_PORT int
+	HOST           string
+	PORT           int
+	PONG_HOST      string
+	PONG_PORT      int
+	GRPC_PONG_HOST string
+	GRPC_PONG_PORT int
 }
 
 func Load() *Config {
 	once.Do(func() {
 		instance = &Config{
-			HOST:      getEnv("HOST"),
-			PORT:      getEnvAsInt("PORT"),
-			PONG_HOST: getEnv("PONG_HOST"),
-			PONG_PORT: getEnvAsInt("PONG_PORT"),
+			HOST:           getEnv("HOST"),
+			PORT:           getEnvAsInt("PORT"),
+			PONG_HOST:      getEnv("PONG_HOST"),
+			PONG_PORT:      getEnvAsInt("PONG_PORT"),
+			GRPC_PONG_HOST: getEnv("GRPC_PONG_HOST"),
+			GRPC_PONG_PORT: getEnvAsInt("GRPC_PONG_PORT"),
 		}
 	})
 	return instance
