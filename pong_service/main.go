@@ -54,6 +54,7 @@ func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	m := model{
 		UUID: h.id,
+		Type: "HTTP",
 	}
 	tx := h.db.Table("models").Clauses(clause.Locking{
 		Strength: clause.LockingStrengthUpdate,
@@ -81,5 +82,6 @@ func (h *requestHandler) handle(w http.ResponseWriter, r *http.Request) {
 type model struct {
 	gorm.Model
 	UUID    string
+	Type    string
 	Counter int
 }

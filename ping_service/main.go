@@ -27,6 +27,7 @@ func main() {
 
 	options := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithIdleTimeout(1 * time.Second),
 	}
 	conn, err := grpc.NewClient(fmt.Sprintf("%s:%d", config.GRPC_PONG_HOST, config.GRPC_PONG_PORT), options...)
 	if err != nil {

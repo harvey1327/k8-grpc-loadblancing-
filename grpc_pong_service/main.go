@@ -65,6 +65,7 @@ type ServiceImpl struct {
 func (s *ServiceImpl) Pong(ctx context.Context, req *generated.Request) (*generated.Response, error) {
 	m := model{
 		UUID: s.id,
+		Type: "gRPC",
 	}
 	tx := s.db.Table("models").Clauses(clause.Locking{
 		Strength: clause.LockingStrengthUpdate,
@@ -90,5 +91,6 @@ func (s *ServiceImpl) Pong(ctx context.Context, req *generated.Request) (*genera
 type model struct {
 	gorm.Model
 	UUID    string
+	Type    string
 	Counter int
 }
