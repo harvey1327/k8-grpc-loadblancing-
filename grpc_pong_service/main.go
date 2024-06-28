@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -15,6 +16,7 @@ import (
 	"grpc_pong/proto/generated"
 	"log"
 	"net"
+	"time"
 )
 
 func main() {
@@ -45,7 +47,17 @@ func main() {
 		db: db,
 	}
 
-	grpcServer := grpc.NewServer()
+	// Forces connection timeout to allow client to reconnect with new connection
+	so := []grpc.ServerOption{
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle:     1 * time.Second,
+			MaxConnectionAge:      1 * time.Second,
+			MaxConnectionAgeGrace: 1 * time.Second,
+			Time:                  1 * time.Second,
+			Timeout:               1 * time.Second,
+		}),
+	}
+	grpcServer := grpc.NewServer(so...)
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
