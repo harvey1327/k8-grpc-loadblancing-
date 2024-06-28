@@ -48,6 +48,7 @@ func main() {
 	}
 
 	// Forces connection timeout to allow client to reconnect with new connection
+	// Does not give a perfect balance
 	so := []grpc.ServerOption{
 		grpc.KeepaliveParams(keepalive.ServerParameters{
 			MaxConnectionIdle:     1 * time.Second,
