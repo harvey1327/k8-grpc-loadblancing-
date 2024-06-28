@@ -22,7 +22,7 @@ import (
 func main() {
 
 	config := Load()
-	id := "grpc-" + uuid.New().String()
+	id := uuid.New().String()
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.HOST, config.PORT))
 	if err != nil {
